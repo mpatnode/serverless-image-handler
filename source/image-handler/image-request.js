@@ -141,6 +141,8 @@ class ImageRequest {
             return decoded.key;
         } else if (requestType === "Thumbor" || requestType === "Custom") {
             // Parse the key from the end of the path
+            const pathParts = (event["path"]).split("/");
+
             if (
                 pathParts[i] !== ''
                 && pathParts[i] !== 'fit-in'
