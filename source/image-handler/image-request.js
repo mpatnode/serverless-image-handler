@@ -14,7 +14,7 @@
 const ThumborMapping = require('./thumbor-mapping');
 
 class ImageRequest {
-    
+
     /**
      * Initializer function for creating a new image request, used by the image
      * handler to perform image modifications.
@@ -141,9 +141,15 @@ class ImageRequest {
             return decoded.key;
         } else if (requestType === "Thumbor" || requestType === "Custom") {
             // Parse the key from the end of the path
-            // Assume the path structure looks like '/filter(...)/<original path>'
-            const key = (event["path"]).split(")");
-            // Last element of the key array is '/<original path>': skip the first character
+            if (
+                pathParts[i] !== ''
+                && pathParts[i] !== 'fit-in'
+                && pathParts[i].match(/^\d+x\d+$/) == null
+                && pathParts[i].match(/^filters:/) == null
+            ) {
+                const parts = pathParts.slice(i);
+                return (parts.join('/'));
+            }
             return key[key.length - 1].slice(1);
         } else {
             // Return an error for all other conditions
@@ -157,7 +163,7 @@ class ImageRequest {
 
     /**
      * Determines how to handle the request being made based on the URL path
-     * prefix to the image request. Categorizes a request as either "image" 
+     * prefix to the image request. Categorizes a request as either "image"
      * (uses the Sharp library), "thumbor" (uses Thumbor mapping), or "custom"
      * (uses the rewrite function).
      * @param {Object} event - Lambda request body.
@@ -169,9 +175,9 @@ class ImageRequest {
         const matchThumbor = new RegExp(/^(\/?)((fit-in)?|(filters:.+\(.?\))?|(unsafe)?).*(.+jpg|.+png|.+webp|.+tiff|.+jpeg)$/);
         const matchCustom = new RegExp(/(\/?)(.*)(jpg|png|webp|tiff|jpeg)/);
         const definedEnvironmentVariables = (
-            (process.env.REWRITE_MATCH_PATTERN !== "") && 
-            (process.env.REWRITE_SUBSTITUTION !== "") && 
-            (process.env.REWRITE_MATCH_PATTERN !== undefined) && 
+            (process.env.REWRITE_MATCH_PATTERN !== "") &&
+            (process.env.REWRITE_SUBSTITUTION !== "") &&
+            (process.env.REWRITE_MATCH_PATTERN !== undefined) &&
             (process.env.REWRITE_SUBSTITUTION !== undefined)
         );
         // ----
@@ -220,7 +226,7 @@ class ImageRequest {
     }
 
     /**
-     * Returns a formatted image source bucket whitelist as specified in the 
+     * Returns a formatted image source bucket whitelist as specified in the
      * SOURCE_BUCKETS environment variable of the image handler Lambda
      * function. Provides error handling for missing/invalid values.
      */
