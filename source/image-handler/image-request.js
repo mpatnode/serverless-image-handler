@@ -142,17 +142,17 @@ class ImageRequest {
         } else if (requestType === "Thumbor" || requestType === "Custom") {
             // Parse the key from the end of the path
             const pathParts = (event["path"]).split("/");
-
-            if (
-                pathParts[i] !== ''
-                && pathParts[i] !== 'fit-in'
-                && pathParts[i].match(/^\d+x\d+$/) == null
-                && pathParts[i].match(/^filters:/) == null
-            ) {
-                const parts = pathParts.slice(i);
-                return (parts.join('/'));
+            for (let i = 0; i < pathParts.length; i++) {
+                if (
+                    pathParts[i] !== ''
+                    && pathParts[i] !== 'fit-in'
+                    && pathParts[i].match(/^\d+x\d+$/) == null
+                    && pathParts[i].match(/^filters:/) == null
+                ) {
+                    const parts = pathParts.slice(i);
+                    return (parts.join('/'));
+                }
             }
-            return key[key.length - 1].slice(1);
         } else {
             // Return an error for all other conditions
             throw ({
