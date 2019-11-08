@@ -36,6 +36,11 @@ class ThumborMapping {
                 continue;
             }
 
+            if (edit.match(/^k:/)) {
+                // Skip the hash
+                continue;
+            }
+
             if (edit === 'fit-in') {
                 this.edits.resize = {};
                 this.sizingMethod = edit;

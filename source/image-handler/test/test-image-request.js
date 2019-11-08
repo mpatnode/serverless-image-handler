@@ -112,7 +112,7 @@ describe('setup()', function() {
                 requestType: 'Custom',
                 bucket: 'allowedBucket001',
                 key: 'custom-image.jpg',
-                edits: { 
+                edits: {
                     grayscale: true,
                     rotate: 90
                 },
@@ -180,11 +180,11 @@ describe('getOriginalImage()', function() {
             const sinon = require('sinon');
             const getObject = S3.prototype.getObject = sinon.stub();
             getObject.withArgs({Bucket: 'invalidBucket', Key: 'invalidKey'}).returns({
-                promise: () => { 
+                promise: () => {
                     return Promise.reject({
                         code: 500,
                         message: 'SimulatedInvalidParameterException'
-                    }) 
+                    })
                 }
             });
             // Act
@@ -553,7 +553,7 @@ describe('parseRequestType()', function() {
 // ----------------------------------------------------------------------------
 describe('decodeRequest()', function() {
     describe('001/validRequestPathSpecified', function() {
-        it(`Should pass if a valid base64-encoded path has been specified`, 
+        it(`Should pass if a valid base64-encoded path has been specified`,
             function() {
             // Arrange
             const event = {
@@ -571,7 +571,7 @@ describe('decodeRequest()', function() {
         });
     });
     describe('002/invalidRequestPathSpecified', function() {
-        it(`Should throw an error if a valid base64-encoded path has not been specified`, 
+        it(`Should throw an error if a valid base64-encoded path has not been specified`,
             function() {
             // Arrange
             const event = {
@@ -590,7 +590,7 @@ describe('decodeRequest()', function() {
         });
     });
     describe('003/noPathSpecified', function() {
-        it(`Should throw an error if no path is specified at all`, 
+        it(`Should throw an error if no path is specified at all`,
             function() {
             // Arrange
             const event = {}
@@ -720,3 +720,47 @@ describe('getOutputFormat()', function () {
         });
     });
 });
+
+// ----------------------------------------------------------------------------
+// verifySecurityHash()
+// ----------------------------------------------------------------------------
+describe('verifySecurityHash()', function () {
+    describe('001/validHash', function () {
+        it(`Should pass if the security hash is being validated correctly`, function () {
+
+            // Arrange
+            var security_key = 'MYDOGHASFLEAS';
+            var securityHash = 'M20FPyLuu7';
+
+            const event = {
+                path: '/k:' + securityHash +'/fit-in/100x100/filters:quality(95):format(jpeg)/sparkle/products/www.pier1.com/dis/dw/image/v2/AAID_PRD/on/demandware.static/-/Sites-pier1_master/default/dw8e0e671a/images/2911407/2911407_1.jpg'
+            };
+            // Act
+            const imageRequest = new ImageRequest();
+            var result = imageRequest.verifySecurityHash(event, security_key);
+            // Assert
+            const expectedResult = true;
+            assert.deepEqual(result, expectedResult);
+        });
+    });
+    describe('002/InvalidHash', function () {
+        it(`Should pass if it is throwing error for invalid security hash`, function () {
+
+            // Arrange
+            var security_key = 'MYDOGHASFLEAS';
+            var securityHash = 'YOURDOGHASFLEAS';
+
+            const event = {
+                path: '/k:' + securityHash + "this part doesn't matter"
+            };
+
+            // Act
+            const imageRequest = new ImageRequest();
+            // Assert
+            assert.throws(function () {
+                imageRequest.verifySecurityHash(event, security_key);
+            }, Error, 'ThumborMapping::VerifySecurityHash::InvalidSecurityHash');
+        });
+    });
+});
+
