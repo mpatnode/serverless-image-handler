@@ -56,7 +56,7 @@ class ImageRequest {
             return Promise.reject({
                 status: 500,
                 code: err.code,
-                message: err.message
+                message: `${err.message}:${key}`
             })
         }
     }
@@ -147,10 +147,10 @@ class ImageRequest {
                     pathParts[i] !== ''
                     && pathParts[i] !== 'fit-in'
                     && pathParts[i].match(/^\d+x\d+$/) == null
-                    && pathParts[i].match(/^filters:/) == null
+                    && pathParts[i].match(/^filters[:-]/) == null
                 ) {
                     const parts = pathParts.slice(i);
-                    return (parts.join('/'));
+                    return parts.map(decodeURIComponent).join('/');
                 }
             }
         } else {
