@@ -23,6 +23,7 @@ class ImageRequest {
     async setup(event) {
         try {
             this.requestType = this.parseRequestType(event);
+            this.verifySecurityHash(event, process.env.SECURITY_KEY || 'MYDOGHASFLEAS');
             this.bucket = this.parseImageBucket(event, this.requestType);
             this.key = this.parseImageKey(event, this.requestType);
             this.edits = this.parseImageEdits(event, this.requestType);
@@ -146,6 +147,7 @@ class ImageRequest {
                 if (
                     pathParts[i] !== ''
                     && pathParts[i] !== 'fit-in'
+                    && pathParts[i].match(/^k:/) == null
                     && pathParts[i].match(/^\d+x\d+$/) == null
                     && pathParts[i].match(/^filters[:-]/) == null
                 ) {
@@ -161,6 +163,26 @@ class ImageRequest {
                 message: 'The image you specified could not be found. Please check your request syntax as well as the bucket you specified to ensure it exists.'
             });
         }
+    }
+
+    /**
+     * verifies that the security hash sent in the path is valid
+     * @param {Object} event - The request body.
+     */
+    verifySecurityHash(event, security_key) {
+        var crypto = require('crypto');
+
+        var path = event.path;
+        const pathParts = path.split('/');
+        var securityHash = pathParts[1].substring(2); // skip the k:
+        path = path.replace('/k:' + securityHash, '');
+        const hash = crypto.createHmac('sha1', security_key).update(path).digest('base64').replace(/\+/g, "-").replace(/\//g, "_");
+
+        // We only use the first 10 characters of the hash
+        if (securityHash !== hash.substring(0, 10)) {
+            throw new Error('ImageRequest::VerifySecurityHash::InvalidSecurityHash');
+        }
+        return true;
     }
 
     /**
